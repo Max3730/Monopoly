@@ -92,21 +92,38 @@ header p {
 
 .board {
   display: grid;
-  grid-template-columns: clamp(30px, 5vw, 72px) repeat(9, clamp(20px, 5vw, 48px)) clamp(30px, 5vw, 72px);
-  grid-template-rows: clamp(30px, 5vw, 72px) repeat(9, clamp(20px, 5vw, 48px)) clamp(30px, 5vw, 72px);
-  gap: clamp(1px, 0.3vw, 2px);
-  background: radial-gradient(circle at center, rgba(255, 61, 61, 0.08), transparent 35%),
-              linear-gradient(180deg, rgba(10,10,10,0.98), rgba(18,10,14,0.96));
+  grid-template-columns:
+    clamp(40px, 9vw, 72px)
+    repeat(9, minmax(24px, 1fr))
+    clamp(40px, 9vw, 72px);
+
+  grid-template-rows:
+    clamp(40px, 9vw, 72px)
+    repeat(9, minmax(24px, 1fr))
+    clamp(40px, 9vw, 72px);
+
+  gap: 2px;
+
+  background:
+    radial-gradient(circle at center, rgba(255, 61, 61, 0.08), transparent 35%),
+    linear-gradient(180deg, rgba(10,10,10,0.98), rgba(18,10,14,0.96));
+
   border: 1px solid rgba(224, 55, 72, 0.18);
   border-radius: 24px;
   position: relative;
   user-select: none;
-  box-shadow: var(--shadow-soft), inset 0 0 70px rgba(255, 61, 61, 0.06);
-  width: min(95vw, calc(100vh - 210px));
-  height: min(95vw, calc(100vh - 210px));
-  max-width: 95vw;
-  max-height: calc(100vh - 210px);
+  box-shadow: var(--shadow-soft),
+              inset 0 0 70px rgba(255, 61, 61, 0.06);
+
+  width: 95vw;
+  height: 95vw;
+
+  max-width: 95dvh;
+  max-height: 95dvh;
+
   aspect-ratio: 1 / 1;
+
+  margin: auto;
 }
 
 .cell {
