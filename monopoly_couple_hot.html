@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Monopoly Hot Couple</title>
+
+
+<style>
+:root {
+  --bg-dark: #111111;
+  --bg-card: rgba(20,20,20,0.75);
+  --border-glow: rgba(192, 45, 45, 0.22);
+  --text-light: #f5e6e0;
+  --text-muted: rgba(245,230,224,0.72);
+  --neon-red: #ff3d3d;
+  --neon-orange: #f86a32;
+  --btn-dark: #3a0c11;
+  --btn-rich: #6f121e;
+  --shadow-soft: 0 18px 60px rgba(0,0,0,0.35);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-light);
+  background: radial-gradient(circle at top, rgba(255,75,75,0.08), transparent 20%),
+              linear-gradient(180deg, #070606 0%, #12080b 35%, #000 100%);
+  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  overflow: hidden;
+}
+body.modal-open { overflow: hidden; }
+header { text-align: center; margin-bottom: 10px; flex-shrink: 0; }
+header h1 {
+  color: var(--text-light);
+  font-size: clamp(24px, 5vw, 32px);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 18px rgba(255, 61, 61, 0.45), 0 0 35px rgba(248,106,50,0.12);
+  margin-bottom: 6px;
+}
+header p {
+  color: var(--text-muted);
+  font-size: clamp(12px, 2vw, 15px);
+  margin-top: 0;
+}
+
+.info-bar {
+  display: flex;
+  gap: clamp(10px, 2vw, 18px);
+  justify-content: center;
+  margin-bottom: clamp(10px, 2vw, 14px);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.player-card {
+  background: rgba(25, 15, 18, 0.92);
+  border-radius: 18px;
+  padding: clamp(10px, 1.5vw, 16px) clamp(14px, 3vw, 20px);
+  font-size: clamp(12px, 2.5vw, 15px);
+  font-weight: 700;
+  border: 1px solid rgba(255, 61, 61, 0.18);
+  box-shadow: 0 18px 40px rgba(255, 61, 61, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.player-card.active {
+  border-color: rgba(255, 61, 61, 0.45);
+  box-shadow: 0 22px 50px rgba(255, 61, 61, 0.24);
+  transform: scale(1.04);
+}
+
+.board-outer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(8px, 1.5vw, 14px);
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+  flex: 1;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: clamp(30px, 5vw, 72px) repeat(9, clamp(20px, 5vw, 48px)) clamp(30px, 5vw, 72px);
+  grid-template-rows: clamp(30px, 5vw, 72px) repeat(9, clamp(20px, 5vw, 48px)) clamp(30px, 5vw, 72px);
+  gap: clamp(1px, 0.3vw, 2px);
+  background: radial-gradient(circle at center, rgba(255, 61, 61, 0.08), transparent 35%),
+              linear-gradient(180deg, rgba(10,10,10,0.98), rgba(18,10,14,0.96));
+  border: 1px solid rgba(224, 55, 72, 0.18);
+  border-radius: 24px;
+  position: relative;
+  user-select: none;
+  box-shadow: var(--shadow-soft), inset 0 0 70px rgba(255, 61, 61, 0.06);
+  width: min(95vw, calc(100vh - 210px));
+  height: min(95vw, calc(100vh - 210px));
+  max-width: 95vw;
+  max-height: calc(100vh - 210px);
+  aspect-ratio: 1 / 1;
+}
+
+.cell {
+  background: rgba(20, 20, 20, 0.95);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: clamp(6px, 1.5vw, 9px);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  overflow: hidden;
+  padding: clamp(2px, 0.4vw, 4px);
+  line-height: 1.1;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.05);
+  color: var(--text-light);
+}
+.cell:hover {
+  transform: scale(1.05);
+  z-index: 20;
+  box-shadow: 0 0 18px rgba(255, 61, 61, 0.18), 0 18px 35px rgba(0,0,0,0.32);
+  background: rgba(32, 12, 18, 0.96);
+}
+
+/* Cases coins */
+.cell.corner {
+  font-size: clamp(8px, 2vw, 11px);
+  font-weight: 800;
+  padding: clamp(10px, 1.5vw, 14px);
+  background: rgba(22, 10, 14, 0.95);
+  border: 1px solid rgba(255, 61, 61, 0.18);
+}
+.cell.corner .big-icon { font-size: clamp(18px, 4vw, 28px); margin-bottom: clamp(2px, 0.4vw, 4px); }
+
+/* Propriétés : barre de couleur */
+.cell.prop .color-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0; height: clamp(10px, 2vw, 18px);
+}
+.cell.prop { padding-top: clamp(12px, 2.5vw, 20px); }
+
+/* Bas : barre en haut OK */
+.cell.bottom-row .color-bar { top: 0; bottom: auto; }
+.cell.bottom-row.prop { padding-top: clamp(12px, 2.5vw, 20px); padding-bottom: clamp(1px, 0.3vw, 2px); }
+
+/* Haut : barre en bas */
+.cell.top-row .color-bar { top: auto; bottom: 0; }
+.cell.top-row.prop { padding-top: clamp(1px, 0.3vw, 2px); padding-bottom: clamp(12px, 2.5vw, 20px); }
+
+/* Gauche : barre à droite */
+.cell.left-col .color-bar { top: 0; bottom: 0; left: auto; right: 0; width: clamp(10px, 2vw, 18px); height: 100%; }
+.cell.left-col.prop { padding-right: clamp(12px, 2.5vw, 20px); padding-top: clamp(1px, 0.3vw, 2px); }
+
+/* Droite : barre à gauche */
+.cell.right-col .color-bar { top: 0; bottom: 0; left: 0; right: auto; width: clamp(10px, 2vw, 18px); height: 100%; }
+.cell.right-col.prop { padding-left: clamp(12px, 2.5vw, 20px); padding-top: clamp(1px, 0.3vw, 2px); }
+
+/* Centre */
+.center-area {
+  grid-column: 2 / 11;
+  grid-row: 2 / 11;
+  background: linear-gradient(180deg, rgba(12,8,12,0.85), rgba(18,11,14,0.82)), url('ouii.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 2vw, 20px);
+  padding: clamp(14px, 2.5vw, 20px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 61, 61, 0.14);
+  box-shadow: inset 0 0 50px rgba(255, 61, 61, 0.05), 0 24px 60px rgba(0,0,0,0.35);
+}
+.logo-box {
+  background: rgba(20, 12, 18, 0.9);
+  border: 1px solid rgba(255, 61, 61, 0.18);
+  padding: clamp(12px, 2vw, 16px) clamp(22px, 4vw, 30px);
+  text-align: center;
+  transform: rotate(-12deg);
+  box-shadow: 0 18px 45px rgba(255, 61, 61, 0.12);
+}
+.logo-box h2 {
+  font-size: clamp(18px, 4vw, 28px);
+  font-weight: 900;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+.logo-box span {
+  font-size: clamp(10px, 2.5vw, 14px);
+  color: var(--neon-orange);
+  font-weight: 800;
+}
+
+.dice-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(10px, 2vw, 14px);
+}
+.dice-row {
+  display: flex;
+  gap: clamp(12px, 3vw, 18px);
+  align-items: center;
+}
+.die {
+  width: clamp(44px, 8vw, 62px);
+  height: clamp(44px, 8vw, 62px);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(24px, 5vw, 34px);
+  font-weight: 800;
+  color: var(--text-light);
+  box-shadow: inset 0 0 18px rgba(255, 61, 61, 0.08), 0 10px 25px rgba(0,0,0,0.35);
+}
+.roll-btn {
+  background: linear-gradient(145deg, #750c16, #960e22 60%, #d8393d);
+  color: var(--text-light);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: clamp(12px, 2.2vw, 16px) clamp(24px, 5vw, 32px);
+  font-size: clamp(13px, 3vw, 17px);
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 14px 30px rgba(216, 57, 61, 0.16);
+  text-transform: uppercase;
+}
+.roll-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 18px 40px rgba(216, 57, 61, 0.28);
+  filter: saturate(1.1);
+}
+.roll-btn:active { transform: scale(0.98); }
+.roll-btn:disabled {
+  background: rgba(100, 20, 30, 0.8);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.turn-label {
+  color: var(--text-light);
+  font-size: clamp(12px, 2.5vw, 16px);
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 0 12px rgba(255, 61, 61, 0.18);
+  min-height: clamp(18px, 4vw, 24px);
+}
+
+/* Pions */
+.pawn {
+  position: absolute;
+  width: clamp(18px, 3.5vw, 24px);
+  height: clamp(18px, 3.5vw, 24px);
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 0 18px rgba(255, 61, 61, 0.22);
+  z-index: 15;
+  transition: top 0.5s cubic-bezier(0.4, 0, 0.2, 1), left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.pawn.p1 {
+  background: radial-gradient(circle, #ff5c5c 0%, #9b141e 100%);
+}
+.pawn.p2 {
+  background: radial-gradient(circle, #ff9a50 0%, #913b0f 100%);
+}
+
+/* Modal */
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 3, 3, 0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  backdrop-filter: blur(14px);
+}
+.modal-bg.open { display: flex; }
+.modal {
+  background: rgba(12, 8, 12, 0.92);
+  border-radius: 28px;
+  padding: clamp(1.2rem, 3vw, 1.5rem);
+  max-width: clamp(320px, 90vw, 500px);
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 28px 80px rgba(0,0,0,0.55);
+  border: 1px solid rgba(255, 61, 61, 0.18);
+  animation: modalSlideIn 0.28s ease;
+}
+.modal .challenge {
+  font-size: clamp(14px, 3vw, 18px);
+  color: var(--text-light);
+  line-height: 1.6;
+  margin: clamp(0.8rem, 2vw, 1rem) 0;
+  padding: clamp(1rem, 2vw, 1.2rem);
+  background: rgba(25, 10, 14, 0.9);
+  border-radius: 18px;
+  border-left: 4px solid rgba(255, 61, 61, 0.45);
+  white-space: pre-wrap;
+}
+.modal h3 {
+  font-size: clamp(18px, 4vw, 24px);
+  font-weight: 900;
+  margin-bottom: clamp(0.4rem, 1vw, 0.5rem);
+  color: var(--text-light);
+  text-shadow: 0 0 12px rgba(255, 61, 61, 0.28);
+}
+.modal .tag {
+  display: inline-block;
+  font-size: clamp(10px, 2vw, 12px);
+  padding: clamp(4px, 0.8vw, 6px) clamp(12px, 2.5vw, 14px);
+  border-radius: 99px;
+  margin-bottom: clamp(0.4rem, 1vw, 0.5rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  background: rgba(255, 61, 61, 0.14);
+  color: var(--neon-orange);
+}
+.modal .close-btn {
+  width: 100%;
+  padding: clamp(0.8rem, 2vw, 1rem);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 18px;
+  background: linear-gradient(145deg, #8c121d, #c04643 60%, #ff5c5c);
+  color: var(--text-light);
+  font-size: clamp(13px, 3vw, 16px);
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 12px 28px rgba(255, 61, 61, 0.18);
+}
+.modal .close-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 36px rgba(255, 61, 61, 0.28);
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: clamp(16px, 4vw, 24px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(18, 10, 14, 0.92);
+  color: var(--text-light);
+  padding: clamp(12px, 2vw, 14px) clamp(22px, 4vw, 26px);
+  border-radius: 18px;
+  font-size: clamp(12px, 2.5vw, 15px);
+  font-weight: 600;
+  z-index: 90;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+  border: 1px solid rgba(255, 61, 61, 0.18);
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Lobby */
+.lobby-screen {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(10, 5, 8, 0.95) 0%, rgba(20, 7, 12, 0.95) 55%, rgba(8, 2, 6, 0.98) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+.lobby-screen.hidden { display: none; }
+.lobby-container {
+  background: linear-gradient(180deg, rgba(8,8,8,0.85), rgba(18,11,14,0.82)), url('pexels-nairodreyes-17750015.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 32px;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  max-width: clamp(340px, 85vw, 520px);
+  width: 100%;
+  box-shadow: 0 28px 90px rgba(0,0,0,0.55);
+  text-align: center;
+  animation: lobbyFadeIn 0.45s ease;
+  border: 1px solid rgba(255, 61, 61, 0.18);
+  backdrop-filter: blur(14px);
+}
+@keyframes lobbyFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.lobby-container .logo-box {
+  background: rgba(17, 8, 13, 0.92);
+  border: 1px solid rgba(255, 61, 61, 0.18);
+  padding: clamp(12px, 2vw, 16px) clamp(22px, 4vw, 30px);
+  text-align: center;
+  transform: rotate(-12deg);
+  box-shadow: 0 20px 45px rgba(255, 61, 61, 0.15);
+  margin: 0 auto clamp(20px, 4vw, 30px);
+}
+.lobby-container .logo-box h2 {
+  color: var(--text-light);
+}
+.lobby-container .logo-box span {
+  color: var(--neon-orange);
+}
+.lobby-input {
+  width: 100%;
+  padding: clamp(14px, 3vw, 18px) clamp(18px, 3vw, 20px);
+  font-size: clamp(14px, 3.5vw, 18px);
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 18px;
+  margin-bottom: clamp(16px, 3vw, 20px);
+  text-align: center;
+  font-weight: 600;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-light);
+  backdrop-filter: blur(14px);
+  box-shadow: inset 0 0 20px rgba(255,255,255,0.05);
+}
+.lobby-input::placeholder {
+  color: rgba(245, 230, 224, 0.6);
+}
+.lobby-input:focus {
+  outline: none;
+  border-color: rgba(255, 61, 61, 0.45);
+  box-shadow: 0 0 0 4px rgba(255, 61, 61, 0.1);
+}
+.lobby-btn {
+  width: 100%;
+  padding: clamp(14px, 3vw, 18px) clamp(24px, 5vw, 32px);
+  background: linear-gradient(145deg, rgba(111,18,30,0.95), rgba(173,34,44,0.98));
+  color: var(--text-light);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  font-size: clamp(15px, 3.5vw, 18px);
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  text-transform: uppercase;
+  box-shadow: 0 18px 40px rgba(255, 61, 61, 0.16);
+}
+.lobby-btn:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 22px 48px rgba(255, 61, 61, 0.28);
+  filter: saturate(1.08);
+}
+.lobby-btn:disabled {
+  background: rgba(80, 20, 30, 0.8);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.lobby-status {
+  margin-top: clamp(20px, 4vw, 24px);
+  padding: clamp(14px, 2.5vw, 18px);
+  background: rgba(18, 10, 14, 0.85);
+  border-radius: 20px;
+  font-size: clamp(12px, 2.5vw, 15px);
+  border: 1px solid rgba(255,61,61,0.12);
+  color: var(--text-light);
+}
+.lobby-status .player-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 2vw, 12px);
+  margin: clamp(8px, 1.5vw, 10px) 0;
+  font-weight: 600;
+}
+.lobby-status .player-dot {
+  width: clamp(14px, 2.5vw, 16px);
+  height: clamp(14px, 2.5vw, 16px);
+  border-radius: 50%;
+}
+.lobby-status .player-dot.p1 {
+  background: linear-gradient(145deg, #ef5350, #c62828);
+}
+.lobby-status .player-dot.p2 {
+  background: linear-gradient(145deg, #ffb74d, #ef6c00);
+}
+.lobby-status .waiting {
+  color: rgba(245, 230, 224, 0.72);
+  font-style: italic;
+}
+.reset-link {
+  margin-top: clamp(18px, 3vw, 22px);
+  color: var(--text-light);
+  font-size: clamp(12px, 2.5vw, 14px);
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+.reset-link:hover {
+  color: rgba(255, 142, 96, 0.95);
+  transform: translateY(-1px);
+}
+
+</style>
+</head>
+<body>
+
+<div class="lobby-screen" id="lobby">
+  <div class="lobby-container">
+    <div class="logo-box">
+      <h2>Monopoly</h2>
+      <span>Hot Couple</span>
+    </div>
+    <h3 style="margin-bottom: clamp(16px, 3vw, 24px); font-size: clamp(16px, 4vw, 20px);">Deux joueurs, une partie</h3>
+    <input type="text" class="lobby-input" id="player1Name" placeholder="Prénom du joueur 1" maxlength="20">
+    <input type="text" class="lobby-input" id="player2Name" placeholder="Prénom du joueur 2" maxlength="20">
+    <button class="lobby-btn" id="startBtn" onclick="startLocalGame()">Démarrer la partie</button>
+    <div class="lobby-status" id="lobbyStatus">
+      <div class="waiting">Entrez les deux prénoms puis démarrez la partie.</div>
+    </div>
+    <div class="reset-link" onclick="resetGame()">Réinitialiser</div>
+  </div>
+</div>
+
+<header id="gameHeader" style="display:none;">
+  <h1>Monopoly Hot Couple</h1>
+  <p>Lancez les dés et relevez les défis sensuels</p>
+</header>
+
+<div class="info-bar" id="infoBar" style="display:none;">
+  <div class="player-card active" id="pc1">
+    <span style="color:#3498db;font-size:18px;vertical-align:middle">&#9679;</span> <span id="p1name">Joueur 1</span> &mdash; <span id="p1pos">Départ</span>
+  </div>
+  <div class="player-card" id="pc2">
+    <span style="color:#f39c12;font-size:18px;vertical-align:middle">&#9679;</span> <span id="p2name">Joueur 2</span> &mdash; <span id="p2pos">Départ</span>
+  </div>
+</div>
+
+<div class="board-outer" id="boardOuter" style="display:none;">
+  <div class="board" id="board"></div>
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <span class="tag tag-hot" id="modal-tag">Hot</span>
+    <h3 id="modal-title">Défi</h3>
+    <div class="challenge" id="modal-text"></div>
+    <button class="close-btn" onclick="closeModal()">Défi relevé !</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== 40 CASES ==========
+const cells = [
+  {name:"Départ", icon:"★", type:"start", corner:true},
+  {name:"Baiser langoureux", color:"#8e44ad", type:"hot", price:60, challenge:"Échangez un baiser de 30 secondes, langue comprise. Pas de précipitation !"},
+  {name:"Caisse d'amour", icon:"❤", color:"#2980b9", type:"caisse"},
+  {name:"Caresses intimes", color:"#8e44ad", type:"hot", price:60, challenge:"L'autre joueur choisit une zone à caresser pendant 1 minute."},
+  {name:"Impôt plaisir", icon:"💰", color:"#333", type:"tax", challenge:"Payez avec un baiser de 20 secondes sur le cou."},
+  {name:"Gare du Désir", icon:"🚂", color:"#333", type:"gare", price:200, challenge:"Choisissez un fantasme à réaliser ce soir."},
+  {name:"Strip-tease", color:"#a93226", type:"hot", price:100, challenge:"Retirez un vêtement de façon sensuelle, accompagné de musique si possible."},
+  {name:"Chance", icon:"❓", color:"#f39c12", type:"chance"},
+  {name:"Massage sensuel", color:"#a93226", type:"hot", price:100, challenge:"Massez dos et fesses de votre partenaire pendant 2 minutes."},
+  {name:"Gâterie orale", color:"#a93226", type:"hot", price:120, challenge:"30 secondes de plaisir oral pour votre partenaire."},
+  {name:"Visite Prison", icon:"🔒", color:"#555", type:"prison", corner:true},
+  {name:"Jeu de rôle", color:"#f39c12", type:"hot", price:140, challenge:"Choisissez un scénario : patron/secrétaire, docteur/patient ou prof/élève. Jouez 2 minutes !"},
+  {name:"Électricité", icon:"⚡", color:"#f1c40f", type:"service", price:150, challenge:"Électrisez votre partenaire : chatouillez-le/la partout pendant 1 minute."},
+  {name:"Position surprise", color:"#f39c12", type:"hot", price:140, challenge:"L'adversaire choisit une position à adopter maintenant."},
+  {name:"Attache-moi", color:"#f39c12", type:"hot", price:160, challenge:"Les mains de l'un sont liées (foulard) pendant que l'autre le/la câline 1 min."},
+  {name:"Gare Plaisir", icon:"🚂", color:"#333", type:"gare", price:200, challenge:"Choisissez une zone érogène que vous n'explorez pas souvent."},
+  {name:"Striptease duo", color:"#27ae60", type:"hot", price:180, challenge:"Déshabillage mutuel en musique, un vêtement à la fois."},
+  {name:"Caisse d'amour", icon:"❤", color:"#2980b9", type:"caisse"},
+  {name:"Fantasme avoué", color:"#27ae60", type:"hot", price:180, challenge:"Chaque joueur révèle un fantasme secret. Pas de jugement !"},
+  {name:"Photo coquine", color:"#27ae60", type:"hot", price:200, challenge:"Prenez une photo sensuelle de votre partenaire (pour vous seuls !)."},
+  {name:"Parc Gratuit", icon:"☀", color:"#27ae60", type:"free", corner:true, challenge:"Case libre ! Profitez-en pour un câlin ou choisissez librement un défi déjà visité."},
+  {name:"Corps à corps", color:"#2980b9", type:"hot", price:220, challenge:"Restez collés corps contre corps, sans vous embrasser, pendant 30 secondes."},
+  {name:"Chance", icon:"❓", color:"#f39c12", type:"chance"},
+  {name:"Surprise totale", color:"#2980b9", type:"hot", price:220, challenge:"Le joueur adverse décide entièrement de ce qui se passe pendant 3 minutes."},
+  {name:"Danse sensuelle", color:"#2980b9", type:"hot", price:240, challenge:"Dansez ensemble de façon très proche pendant une chanson."},
+  {name:"Gare Fantaisie", icon:"🚂", color:"#333", type:"gare", price:200, challenge:"Pimentez la soirée : ajoutez un accessoire (glaçon, plume, foulard...)."},
+  {name:"Bain ensemble", color:"#8e44ad", type:"hot", price:260, challenge:"Prochain tour : bain ou douche ensemble (ou promesse pour ce soir)."},
+  {name:"Gâterie mutuelle", color:"#8e44ad", type:"hot", price:260, challenge:"Plaisir mutuel simultané pendant 2 minutes."},
+  {name:"Eau des sens", icon:"💧", color:"#3498db", type:"service", price:150, challenge:"Lèchez/embrassez le corps de votre partenaire du cou jusqu'au nombril."},
+  {name:"Nuit coquine", color:"#8e44ad", type:"hot", price:280, challenge:"Le gagnant choisit l'activité hot de la nuit. Bonne chance !"},
+  {name:"Allez en prison", icon:"🚔", color:"#e74c3c", type:"go_prison", corner:true},
+  {name:"Baiser interdit", color:"#c0392b", type:"hot", price:300, challenge:"Vous ne devez pas vous embrasser pendant 3 tours. Contact labial = gage !"},
+  {name:"Aveugle", color:"#c0392b", type:"hot", price:300, challenge:"Bandez les yeux de votre partenaire et surprenez-le/la pendant 2 minutes."},
+  {name:"Caisse d'amour", icon:"❤", color:"#2980b9", type:"caisse"},
+  {name:"Écriture érotique", color:"#c0392b", type:"hot", price:320, challenge:"Écrivez un message coquin sur le corps de votre partenaire avec votre langue."},
+  {name:"Gare Passion", icon:"🚂", color:"#333", type:"gare", price:200, challenge:"Inventez une nouvelle position ensemble et essayez-la 1 minute."},
+  {name:"Chance", icon:"❓", color:"#f39c12", type:"chance"},
+  {name:"Défi ultime", color:"#333", type:"hot", price:350, challenge:"Le joueur adverse choisit le défi le plus osé de sa liste personnelle."},
+  {name:"Taxe de luxe", icon:"💎", color:"#333", type:"tax", challenge:"Payez avec un strip-tease complet (jusqu'à la lingerie minimum)."},
+  {name:"Nuit torride", color:"#c0392b", type:"hot", price:400, challenge:"Vous avez atteint la case finale. Célébrez avec une nuit selon les envies du gagnant."}
+];
+
+const chances = [
+  "Embrassez-vous passionnément pendant 20 secondes.",
+  "Chuchotez quelque chose de très osé à l'oreille de votre partenaire.",
+  "Avancez de 3 cases et exécutez le défi qui s'y trouve.",
+  "Échangez un massage de 2 minutes où vous voulez.",
+  "Choisissez une zone du corps à embrasser sur votre partenaire.",
+  "Rejouez le défi de la dernière case visitée.",
+  "Reculez de 2 cases et exécutez le défi.",
+  "Le joueur en retard choisit le prochain défi de l'autre."
+];
+
+const caisses = [
+  "Chaque joueur dit ce qu'il aimerait que l'autre lui fasse ce soir.",
+  "Le joueur en tête retire un vêtement.",
+  "Offrez 2 minutes de câlins sensuels à votre partenaire.",
+  "Décrivez votre scène préférée d'un film ou livre érotique.",
+  "Soufflez doucement dans le cou de votre partenaire pendant 30 secondes.",
+  "Dites 3 choses que vous adorez chez votre partenaire.",
+  "Faites un slow très serré pendant 1 minute sans vous embrasser.",
+  "Le joueur adverse choisit une zone à lécher pendant 20 secondes."
+];
+
+let gameState = {
+  players: [],
+  currentPlayerIndex: 0,
+  positions: [0, 0],
+  gameStarted: false
+};
+
+let pos = [0, 0];
+let turn = 0;
+let rolling = false;
+let cellEls = [];
+
+// Layout positions (row/col in the 11x11 grid)
+// 0=top-left, 1..9 top row left-to-right, 10=top-right
+// 11..19 right column top-to-bottom, 20=bottom-right, 21..29 bottom row right-to-left, 30=bottom-left, 31..39 left column bottom-to-top
+// Wait: real monopoly layout:
+// 0 (bottom-left), 1-9 (bottom), 10 (bottom-right? No, 10 is top-right in real monopoly)
+// Real monopoly index positions:
+// 0 = Go (bottom-left)
+// 1-9 = bottom row left to right
+// 10 = Jail/Just Visiting (top-right)
+// 11-19 = right column top to bottom
+// 20 = Free Parking (top-left)
+// 21-29 = top row left to right
+// 30 = Go To Jail (bottom-right)
+// 31-39 = left column bottom to top
+
+const layout = {
+  // Bas gauche -> bas droite
+  0:{r:11,c:1},
+  1:{r:11,c:2},
+  2:{r:11,c:3},
+  3:{r:11,c:4},
+  4:{r:11,c:5},
+  5:{r:11,c:6},
+  6:{r:11,c:7},
+  7:{r:11,c:8},
+  8:{r:11,c:9},
+  9:{r:11,c:10},
+
+  // Coin bas droite
+  10:{r:11,c:11},
+
+  // Colonne droite (bas -> haut)
+  11:{r:10,c:11},
+  12:{r:9,c:11},
+  13:{r:8,c:11},
+  14:{r:7,c:11},
+  15:{r:6,c:11},
+  16:{r:5,c:11},
+  17:{r:4,c:11},
+  18:{r:3,c:11},
+  19:{r:2,c:11},
+
+  // Coin haut droite
+  20:{r:1,c:11},
+
+  // Ligne du haut (droite -> gauche)
+  21:{r:1,c:10},
+  22:{r:1,c:9},
+  23:{r:1,c:8},
+  24:{r:1,c:7},
+  25:{r:1,c:6},
+  26:{r:1,c:5},
+  27:{r:1,c:4},
+  28:{r:1,c:3},
+  29:{r:1,c:2},
+
+  // Coin haut gauche
+  30:{r:1,c:1},
+
+  // Colonne gauche (haut -> bas)
+  31:{r:2,c:1},
+  32:{r:3,c:1},
+  33:{r:4,c:1},
+  34:{r:5,c:1},
+  35:{r:6,c:1},
+  36:{r:7,c:1},
+  37:{r:8,c:1},
+  38:{r:9,c:1},
+  39:{r:10,c:1}
+};
+
+function getPosClass(idx) {
+  if (idx >= 0 && idx <= 9) return 'bottom-row';
+  if (idx >= 11 && idx <= 19) return 'right-col';
+  if (idx >= 21 && idx <= 29) return 'top-row';
+  if (idx >= 31 && idx <= 39) return 'left-col';
+  return '';
+}
+
+// ========== LOBBY FUNCTIONS ==========
+function startLocalGame() {
+  const name1 = document.getElementById('player1Name').value.trim();
+  const name2 = document.getElementById('player2Name').value.trim();
+
+  if (!name1 || !name2) {
+    showToast('Entrez les deux prénoms pour démarrer la partie.');
+    return;
+  }
+
+  if (name1.toLowerCase() === name2.toLowerCase()) {
+    showToast('Les deux joueurs doivent avoir des prénoms différents.');
+    return;
+  }
+
+  gameState.players = [name1, name2];
+  gameState.positions = [0, 0];
+  gameState.currentPlayerIndex = 0;
+  gameState.gameStarted = true;
+
+  document.getElementById('lobby').classList.add('hidden');
+  document.getElementById('gameHeader').style.display = 'block';
+  document.getElementById('infoBar').style.display = 'flex';
+  document.getElementById('boardOuter').style.display = 'flex';
+
+  document.getElementById('p1name').textContent = name1;
+  document.getElementById('p2name').textContent = name2;
+  document.getElementById('p1pos').textContent = 'Départ';
+  document.getElementById('p2pos').textContent = 'Départ';
+
+  buildBoard();
+  updateLobbyUI();
+  showToast('Partie lancée ! Bon jeu.');
+}
+
+function resetGame() {
+  if (!confirm('Voulez-vous vraiment réinitialiser la partie ?')) return;
+
+  gameState = {
+    players: [],
+    currentPlayerIndex: 0,
+    positions: [0, 0],
+    gameStarted: false
+  };
+  pos = [0, 0];
+  turn = 0;
+  rolling = false;
+  cellEls = [];
+
+  document.getElementById('player1Name').value = '';
+  document.getElementById('player2Name').value = '';
+  document.getElementById('lobby').classList.remove('hidden');
+  document.getElementById('gameHeader').style.display = 'none';
+  document.getElementById('infoBar').style.display = 'none';
+  document.getElementById('boardOuter').style.display = 'none';
+  document.getElementById('board').innerHTML = '';
+  document.getElementById('turnmsg').textContent = 'Tour du joueur 1 — Lancez les dés !';
+
+  updateLobbyStatus();
+  showToast('Partie réinitialisée');
+}
+
+function updateLobbyStatus() {
+  const statusEl = document.getElementById('lobbyStatus');
+  statusEl.innerHTML = '<div class="waiting">Entrez les deux prénoms puis démarrez la partie.</div>';
+}
+
+function startGame() {
+  gameState.gameStarted = true;
+  
+  document.getElementById('lobby').classList.add('hidden');
+  document.getElementById('gameHeader').style.display = 'block';
+  document.getElementById('infoBar').style.display = 'flex';
+  document.getElementById('boardOuter').style.display = 'flex';
+  
+  pos = gameState.positions;
+  turn = gameState.currentPlayerIndex;
+  
+  document.getElementById('p1name').textContent = gameState.players[0];
+  document.getElementById('p2name').textContent = gameState.players[1];
+  
+  buildBoard();
+  updateLobbyUI();
+}
+
+function updateLobbyUI() {
+  document.getElementById('pc1').classList.toggle('active', turn === 0);
+  document.getElementById('pc2').classList.toggle('active', turn === 1);
+  document.getElementById('turnmsg').textContent = `Tour de ${gameState.players[turn]} — Lancez les dés !`;
+}
+
+function buildBoard() {
+  const board = document.getElementById('board');
+
+  // Create cells in grid order: loop all possible positions and place the matching cell
+  // Simpler: create each cell by index and assign grid-column/row via style
+  for (let i = 0; i < 40; i++) {
+    const c = cells[i];
+    const l = layout[i];
+    let el;
+    if (c.corner) {
+      el = makeCorner(c, i);
+    } else {
+      el = makeCell(c, i);
+    }
+    el.style.gridColumn = l.c;
+    el.style.gridRow = l.r;
+    board.appendChild(el);
+    cellEls[i] = el;
+  }
+
+  // Center area
+  const center = document.createElement('div');
+  center.className = 'center-area';
+  center.style.gridColumn = '2 / 11';
+  center.style.gridRow = '2 / 11';
+  center.innerHTML = `
+    <div class="logo-box">
+      <h2>Monopoly</h2>
+      <span>Hot Couple</span>
+    </div>
+    <div class="dice-panel">
+      <div class="dice-row">
+        <div class="die" id="die1">—</div>
+        <div class="die" id="die2">—</div>
+      </div>
+      <button class="roll-btn" id="rollBtn" onclick="rollDice()">Lancer les dés</button>
+      <div class="turn-label" id="turnmsg">Tour du Joueur 1 — Lancez les dés !</div>
+    </div>
+  `;
+  board.appendChild(center);
+
+  // Pawns
+  const p1 = document.createElement('div');
+  p1.className = 'pawn p1';
+  p1.id = 'pawn1';
+  board.appendChild(p1);
+
+  const p2 = document.createElement('div');
+  p2.className = 'pawn p2';
+  p2.id = 'pawn2';
+  board.appendChild(p2);
+
+  updatePawns();
+}
+
+function makeCorner(c, idx) {
+  const d = document.createElement('div');
+  d.className = 'cell corner';
+  d.dataset.idx = idx;
+  const icon = c.icon || '★';
+  d.innerHTML = `<div class="big-icon">${icon}</div><div>${c.name}</div>`;
+  d.addEventListener('click', () => showChallenge(c, idx));
+  return d;
+}
+
+function makeCell(c, idx) {
+  const d = document.createElement('div');
+  const posClass = getPosClass(idx);
+  const isProp = !!c.color && (c.type === 'hot' || c.type === 'gare' || c.type === 'service');
+  d.className = `cell ${posClass} ${isProp ? 'prop' : ''}`;
+  d.dataset.idx = idx;
+
+  let inner = '';
+  if (isProp && c.color) {
+    inner += `<div class="color-bar" style="background:${c.color}"></div>`;
+  }
+  if (c.icon) {
+    inner += `<div style="font-size:16px;margin-bottom:1px">${c.icon}</div>`;
+  }
+  inner += `<div>${c.name}</div>`;
+  if (c.price) {
+    inner += `<div style="font-size:8px;color:#555;margin-top:1px">${c.price}€</div>`;
+  }
+  d.innerHTML = inner;
+  d.addEventListener('click', () => showChallenge(c, idx));
+  return d;
+}
+
+function getCellRect(idx) {
+  const el = cellEls[idx];
+  if (!el) return {x:0,y:0,w:0,h:0};
+  const board = document.getElementById('board');
+  const bRect = board.getBoundingClientRect();
+  const cRect = el.getBoundingClientRect();
+  return {
+    x: cRect.left - bRect.left,
+    y: cRect.top - bRect.top,
+    w: cRect.width,
+    h: cRect.height
+  };
+}
+
+function updatePawns() {
+  for (let p = 0; p < 2; p++) {
+    const pawn = document.getElementById('pawn' + (p+1));
+    const r = getCellRect(pos[p]);
+    // Offset to avoid overlap
+    const offX = p === 0 ? r.w * 0.55 : r.w * 0.12;
+    const offY = p === 0 ? r.h * 0.55 : r.h * 0.12;
+    pawn.style.left = (r.x + offX) + 'px';
+    pawn.style.top = (r.y + offY) + 'px';
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function rollDice() {
+  if (rolling) return;
+  rolling = true;
+  const btn = document.getElementById('rollBtn');
+  btn.disabled = true;
+
+  let count = 0;
+  const dieFaces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+  const interval = setInterval(() => {
+    document.getElementById('die1').textContent = dieFaces[Math.floor(Math.random()*6)];
+    document.getElementById('die2').textContent = dieFaces[Math.floor(Math.random()*6)];
+    count++;
+    if (count >= 10) {
+      clearInterval(interval);
+      const d1 = Math.floor(Math.random()*6)+1;
+      const d2 = Math.floor(Math.random()*6)+1;
+      document.getElementById('die1').textContent = dieFaces[d1-1];
+      document.getElementById('die2').textContent = dieFaces[d2-1];
+      const total = d1 + d2;
+
+      const current = turn;
+      let oldPos = pos[current];
+      let newPos = (oldPos + total) % 40;
+
+      // Pass Go bonus
+      if (oldPos + total >= 40) {
+        setTimeout(() => showToast("Vous passez par la case Départ ! Bonus : baiser de 20s"), 400);
+      }
+
+      pos[current] = newPos;
+      gameState.positions[current] = newPos;
+      document.getElementById(`p${current+1}pos`).textContent = cells[newPos].name;
+      updatePawns();
+
+      const cell = cells[newPos];
+      document.getElementById('turnmsg').textContent = `${gameState.players[current]} avance de ${total} et atterrit sur "${cell.name}"`;
+
+      setTimeout(() => {
+        showChallenge(cell, newPos);
+        rolling = false;
+        btn.disabled = false;
+        turn = (turn + 1) % 2;
+        gameState.currentPlayerIndex = turn;
+        setTimeout(() => {
+          document.getElementById('pc1').classList.toggle('active', turn === 0);
+          document.getElementById('pc2').classList.toggle('active', turn === 1);
+          document.getElementById('turnmsg').textContent = `Tour de ${gameState.players[turn]} — Lancez les dés !`;
+        }, 1500);
+      }, 600);
+    }
+  }, 80);
+}
+
+function showChallenge(cell, idx) {
+  const modal = document.getElementById('modal');
+  const tag = document.getElementById('modal-tag');
+  const title = document.getElementById('modal-title');
+  const text = document.getElementById('modal-text');
+  document.body.classList.add('modal-open');
+
+  let challenge = cell.challenge || '';
+  let tagText = 'Hot';
+  let tagClass = 'tag-hot';
+
+  if (cell.type === 'chance') {
+    challenge = chances[Math.floor(Math.random()*chances.length)];
+    tagText = 'Chance'; tagClass = 'tag-chance';
+  } else if (cell.type === 'caisse') {
+    challenge = caisses[Math.floor(Math.random()*caisses.length)];
+    tagText = 'Caisse'; tagClass = 'tag-caisse';
+  } else if (cell.type === 'start') {
+    challenge = "Vous êtes sur la case Départ ! Chaque joueur embrasse l'autre où il veut.";
+    tagText = 'Bonus'; tagClass = 'tag-special';
+  } else if (cell.type === 'prison') {
+    challenge = "Vous visitez la prison du désir ! Obéissez à toutes les demandes de votre partenaire pendant 1 minute.";
+    tagText = 'Prison'; tagClass = 'tag-dare';
+  } else if (cell.type === 'go_prison') {
+    challenge = "Allez directement en prison ! Votre partenaire choisit le prochain défi à accomplir.";
+    tagText = 'Prison !'; tagClass = 'tag-dare';
+    setTimeout(() => {
+      // Move current player to visit prison (index 10) — actually Go to jail sends to jail (index 10 is just visiting, but for our game we land on 10)
+      pos[turn === 0 ? 0 : 1] = 10;
+      updatePawns();
+      document.getElementById(`p${turn===0?1:2}pos`).textContent = cells[10].name;
+    }, 800);
+  } else if (cell.type === 'free') {
+    challenge = cell.challenge || "Case libre ! Profitez-en pour un câlin ou choisissez librement un défi déjà visité.";
+    tagText = 'Libre'; tagClass = 'tag-special';
+  } else if (cell.type === 'gare') {
+    tagText = 'Gare'; tagClass = 'tag-dare';
+  } else if (cell.type === 'service') {
+    tagText = 'Service'; tagClass = 'tag-special';
+  } else if (cell.type === 'tax') {
+    tagText = 'Taxe'; tagClass = 'tag-dare';
+  }
+
+  if (!challenge) return;
+  tag.textContent = tagText;
+  tag.className = 'tag ' + tagClass;
+  title.textContent = cell.name;
+  text.textContent = challenge;
+  modal.classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.body.classList.remove('modal-open');
+}
+
+// Close modal on backdrop click
+document.getElementById('modal').addEventListener('click', (e) => {
+  if (e.target.id === 'modal') closeModal();
+});
+
+// Keyboard support
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === ' ' || e.key === 'Enter') {
+    if (!document.getElementById('modal').classList.contains('open') && !document.getElementById('lobby').classList.contains('hidden')) {
+      // Don't auto-submit on Enter in lobby
+    } else if (!document.getElementById('modal').classList.contains('open')) {
+      rollDice();
+    } else {
+      closeModal();
+    }
+  }
+});
+
+window.addEventListener('resize', () => {
+  updatePawns();
+});
+
+// Initialize lobby - no auto-load with invitation system
+updateLobbyStatus();
+</script>
+</body>
+</html>
